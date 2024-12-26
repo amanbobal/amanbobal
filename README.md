@@ -13,4 +13,8 @@
 
 <br>
 
+  [![trophy](https://github-profile-trophy.vercel.app/?username=amanbobal&theme=tokyonight&row=1&margin-w=20)]()
+
+<br>
+
 [![An image of @amanbobal's Holopin badges, which is a link to view their full Holopin profile](https://holopin.me/amanbobal)](https://holopin.io/@amanbobal)
