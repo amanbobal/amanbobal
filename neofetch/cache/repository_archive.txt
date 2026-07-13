@@ -1,0 +1,3 @@
+# Archived repository stats for repos that were deleted or made private.
+# Format per line: repo_hash total_commits my_commits additions deletions
+# Leave empty unless you need to preserve stats from old repos.

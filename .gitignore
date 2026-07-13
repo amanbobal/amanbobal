@@ -1,0 +1,4 @@
+andrew6rant-main
+.env.local
+__pycache__/
+*.pyc
