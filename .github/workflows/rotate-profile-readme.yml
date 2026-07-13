@@ -50,14 +50,16 @@ jobs:
           PROFILE="$(python scripts/rotate_readme.py --print-only)"
           echo "Selected profile: ${PROFILE}"
 
+          # Always install dependencies to ensure the pip cache folder is created
+          python -m pip install --upgrade pip
+          python -m pip install -r neofetch/cache/requirements.txt
+
           if [ "${PROFILE}" = "neofetch" ]; then
             if [ -z "${ACCESS_TOKEN:-}" ] || [ -z "${USER_NAME:-}" ]; then
               echo "ACCESS_TOKEN and USER_NAME secrets are required for the neofetch profile." >&2
               exit 1
             fi
 
-            python -m pip install --upgrade pip
-            python -m pip install -r neofetch/cache/requirements.txt
             (
               cd neofetch
               python today.py
