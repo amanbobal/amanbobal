@@ -340,12 +340,15 @@ def justify_format(root, element_id, new_text, length=0):
         new_text = f"{'{:,}'.format(new_text)}"
     new_text = str(new_text)
     find_and_replace(root, element_id, new_text)
-    just_len = max(0, length - len(new_text))
-    if just_len <= 2:
-        dot_map = {0: "", 1: " ", 2: ". "}
-        dot_string = dot_map[just_len]
+    dot_len = max(0, length - len(new_text))
+    if dot_len <= 0:
+        dot_string = ""
+    elif dot_len == 1:
+        dot_string = " "
+    elif dot_len == 2:
+        dot_string = ". "
     else:
-        dot_string = " " + ("." * just_len) + " "
+        dot_string = " " + ("." * (dot_len - 2)) + " "
     find_and_replace(root, f"{element_id}_dots", dot_string)
 
 
@@ -466,12 +469,14 @@ def svg_overwrite(filename, age_data, commit_data, star_data, repo_data, contrib
 
     # 2. Update dynamic fields (and justify Uptime)
     justify_field(root, "age_data", age_data, "Uptime", ALIGN_COLUMN)
-    justify_format(root, "commit_data", commit_data, 22)
+    justify_format(root, "commit_data", commit_data, 27)
     justify_format(root, "star_data", star_data, 14)
-    justify_format(root, "repo_data", repo_data, 6)
-    justify_format(root, "contrib_data", contrib_data)
+    justify_format(root, "repo_data", repo_data, 10)
+    # Pad contrib_data to width of 3 using leading spaces
+    contrib_str = f"{contrib_data:>3}"
+    find_and_replace(root, "contrib_data", contrib_str)
     justify_format(root, "follower_data", follower_data, 10)
-    justify_format(root, "loc_data", loc_data[2], 9)
+    justify_format(root, "loc_data", loc_data[2], 11)
     justify_format(root, "loc_add", loc_data[0])
     justify_format(root, "loc_del", loc_data[1], 7)
 
