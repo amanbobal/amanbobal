@@ -90,7 +90,7 @@ def simple_request(func_name, query, variables):
     raise Exception(func_name, " has failed with a", request.status_code, request.text, QUERY_COUNT)
 
 
-def graph_repos_stars(count_type, owner_affiliation, cursor=None):
+def graph_repos_stars(count_type, owner_affiliation, cursor=None, edges=None):
     query_count("graph_repos_stars")
     query = """
     query ($owner_affiliation: [RepositoryAffiliation], $login: String!, $cursor: String) {
@@ -116,10 +116,21 @@ def graph_repos_stars(count_type, owner_affiliation, cursor=None):
     }"""
     variables = {"owner_affiliation": owner_affiliation, "login": USER_NAME, "cursor": cursor}
     request = simple_request(graph_repos_stars.__name__, query, variables)
+    repositories = request.json()["data"]["user"]["repositories"]
     if count_type == "repos":
-        return request.json()["data"]["user"]["repositories"]["totalCount"]
+        return repositories["totalCount"]
     if count_type == "stars":
-        return stars_counter(request.json()["data"]["user"]["repositories"]["edges"])
+        if edges is None:
+            edges = []
+        edges += repositories["edges"]
+        if repositories["pageInfo"]["hasNextPage"]:
+            return graph_repos_stars(
+                count_type,
+                owner_affiliation,
+                repositories["pageInfo"]["endCursor"],
+                edges,
+            )
+        return stars_counter(edges)
 
 
 def recursive_loc(owner, repo_name, data, cache_comment, addition_total=0, deletion_total=0, my_commits=0, cursor=None):
@@ -310,8 +321,12 @@ def flush_cache(edges, filename, comment_size):
             data = f.readlines()[:comment_size]
     with open(filename, "w") as f:
         f.writelines(data)
-        for node in edges:
-            f.write(hashlib.sha256(node["node"]["nameWithOwner"].encode("utf-8")).hexdigest() + " 0 0 0 0\n")
+        for edge in edges:
+            node = edge.get("node")
+            if not node or not node.get("nameWithOwner"):
+                f.write("0" * 64 + " 0 0 0 0\n")
+                continue
+            f.write(hashlib.sha256(node["nameWithOwner"].encode("utf-8")).hexdigest() + " 0 0 0 0\n")
 
 
 def force_close_file(data, cache_comment):
@@ -324,8 +339,14 @@ def force_close_file(data, cache_comment):
 
 def stars_counter(data):
     total_stars = 0
-    for node in data:
-        total_stars += node["node"]["stargazers"]["totalCount"]
+    for edge in data:
+        node = edge.get("node")
+        if not node:
+            continue
+        stargazers = node.get("stargazers")
+        if not stargazers:
+            continue
+        total_stars += stargazers.get("totalCount", 0)
     return total_stars
 
 
